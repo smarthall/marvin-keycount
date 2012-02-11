@@ -12,4 +12,4 @@ x11keycount.o: x11keycount.c x11keycount.h
 	gcc -Wall -c -std=c99 x11keycount.c -o x11keycount.o
 
 clean:
-	-rm -f marvinlog x11keycount.o
+	-rm -f marvinlog *.o
