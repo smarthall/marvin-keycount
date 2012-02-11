@@ -1,0 +1,3 @@
+# Marvin Keycounter
+
+Marvin Keycounter counts the number of keypresses and releases during the play of the arcade machine. This can then be used to generate usage statistics for it.
