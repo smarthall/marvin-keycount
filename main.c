@@ -2,22 +2,25 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "x11keycount.h"
+#include "tcpserver.h"
 
 int main() {
     x11keycount_t *keycount;
-    int count, total = 0;
+    tcpserver_t *server;
+    int count;
+    unsigned long total = 0;
 
     keycount = x11keycount_init();
+    server = tcpserver_init();
 
     while (1) {
         x11keycount_count(keycount, &count);
-	if (count > 0) {
-	    total += count;
-	    printf("%d\n", total);
-	}
-        usleep(30000);
+	total += count;
+	tcpserver_sendreplies(server, 10, total);
     }
 
+    tcpserver_close(server);
+    server = NULL;
     x11keycount_close(keycount);
     keycount = NULL;
 }
