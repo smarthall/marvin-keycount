@@ -6,7 +6,7 @@ LDFLAGS=-Wall -lX11
 all:  marvinlog
 
 marvinlog: x11keycount.o main.o tcpserver.o
-	$(CC) $(LDFLAGS) main.o x11keycount.o -o marvinlog
+	$(CC) $(LDFLAGS) main.o x11keycount.o tcpserver.o -o marvinlog
 
 main.o: main.c
 	$(CC) $(CFLAGS) main.c -o main.o
