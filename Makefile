@@ -17,5 +17,8 @@ x11keycount.o: x11keycount.c x11keycount.h
 tcpserver.o: tcpserver.c tcpserver.h
 	$(CC) $(CFLAGS) tcpserver.c -o tcpserver.o
 
+install: marvinlog
+	cp marvinlog $(DESTDIR)/usr/bin/marvinlog
+
 clean:
 	-rm -f marvinlog *.o
