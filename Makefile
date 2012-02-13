@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-g -Wall -c -std=c99
 LDFLAGS=-Wall -lX11
 
-.PHONY: all clean
+.PHONY: all clean install
 all:  marvinlog
 
 marvinlog: x11keycount.o main.o tcpserver.o
@@ -18,7 +18,8 @@ tcpserver.o: tcpserver.c tcpserver.h
 	$(CC) $(CFLAGS) tcpserver.c -o tcpserver.o
 
 install: marvinlog
-	cp marvinlog $(DESTDIR)/usr/bin/marvinlog
+	install -d $(DESTDIR)/usr/bin
+	install -m 0755 marvinlog $(DESTDIR)/usr/bin/marvinlog
 
 clean:
 	-rm -f marvinlog *.o
