@@ -41,11 +41,12 @@ int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned long count)
         csock = accept(server->list_s, NULL, NULL);
 	outstream = fdopen(csock, "a");
         fprintf(outstream, "%ld\n", count);
+	count = 0;
 	fclose(outstream);
 	close(csock);
     }
 
-    return EXIT_SUCCESS;
+    return count;
 }
 
 int tcpserver_close(tcpserver_t *server) {
