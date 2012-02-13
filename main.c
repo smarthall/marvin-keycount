@@ -16,7 +16,7 @@ int main() {
     while (1) {
         x11keycount_count(keycount, &count);
 	total += count;
-	total = tcpserver_sendreplies(server, 200, total);
+	total = tcpserver_sendreplies(server, 10000, total);
     }
 
     tcpserver_close(server);
