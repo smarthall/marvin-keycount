@@ -54,4 +54,9 @@ int tcpserver_close(tcpserver_t *server) {
     return EXIT_SUCCESS;
 }
 
+int tcpserver_setcallback(tcpserver_t *server,
+    int (*tcpcallback)(char*, char*, int)) {
+    server->tcpcallback = tcpcallback;
+    return EXIT_SUCCESS;
+}
 
