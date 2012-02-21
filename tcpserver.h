@@ -9,7 +9,7 @@ typedef struct {
 } tcpserver_t;
 
 tcpserver_t *tcpserver_init();
-int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned long count);
+int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned int *count);
 int tcpserver_close(tcpserver_t *server);
 
 #endif

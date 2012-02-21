@@ -26,10 +26,11 @@ tcpserver_t *tcpserver_init() {
     return server;
 }
 
-int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned long count) {
+int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned int *count) {
     fd_set socks;
     struct timeval time;
     int csock;
+    int total = 0;
     FILE *outstream;
 
     time.tv_sec = 0;
@@ -38,15 +39,17 @@ int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned long count)
     FD_SET(server->list_s, &socks);
 
     while (select(server->list_s + 1, &socks, NULL, NULL, &time) > 0) {
+	// TODO: FIX THIS HACK!!!!
+	total = 0;
+	for (int i = 0; i < 100; i++) total += count[i];
         csock = accept(server->list_s, NULL, NULL);
 	outstream = fdopen(csock, "a");
-        fprintf(outstream, "%ld\n", count);
-	count = 0;
+        fprintf(outstream, "%u\n", total);
 	fclose(outstream);
 	close(csock);
     }
 
-    return count;
+    return EXIT_SUCCESS;
 }
 
 int tcpserver_close(tcpserver_t *server) {
