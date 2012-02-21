@@ -30,7 +30,7 @@ int main() {
 	countbuckets[currentbucket] += count;
 	tcpserver_sendreplies(server, WAITTIME, countbuckets);
 
-	if (newbucket <= time(NULL)) {
+	if (newbucket < time(NULL)) {
            currentbucket = (currentbucket + 1) % BUCKETS;
            countbuckets[currentbucket] = 0;
            newbucket = time(NULL) + BUCKTIME;
