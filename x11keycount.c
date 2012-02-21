@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 x11keycount_t* x11keycount_init() {
     x11keycount_t *keycount;
     int keymapret;
 
-    keycount = malloc(sizeof(x11keycount_t));
+    keycount = calloc(1, sizeof(x11keycount_t));
     if (keycount == NULL) {
         return NULL;
     }
@@ -22,20 +23,21 @@ x11keycount_t* x11keycount_init() {
         return NULL;
     }
 
+    keycount->nb_time = time(NULL) + BUCKTIME;
+
     return keycount;
 }
 
 int x11keycount_close(x11keycount_t *keycount) {
     XCloseDisplay(keycount->disp);
     free(keycount);
-    
+
     return EXIT_SUCCESS;
 }
 
-int x11keycount_count(x11keycount_t *keycount, int *count) {
+int x11keycount_poll(x11keycount_t *keycount) {
     char keys[32];
     int keymapret;
-    *count = 0;
 
     keymapret = XQueryKeymap(keycount->disp,keys);
     if (keymapret == 0) {
@@ -51,12 +53,31 @@ int x11keycount_count(x11keycount_t *keycount, int *count) {
                 c += diff & 1;
             }
             if (c > 0) {
-                *count += c;
+                keycount->buckets[keycount->cb] += c;
             }
         }
         memcpy(keycount->last_keys, keys, sizeof(char) * 32);
     }
 
+    if (keycount->nb_time < time(NULL)) {
+        keycount->cb = (keycount->cb + 1) % BUCKETS;
+        keycount->buckets[keycount->cb] = 0;
+        keycount->nb_time = time(NULL) + BUCKTIME;
+    }
+
     return EXIT_SUCCESS;
+}
+
+unsigned long x11keycount_total(x11keycount_t *keycount) {
+    unsigned long count = 0;
+
+    for (int i = 0; i < BUCKETS; i++)
+        count += keycount->buckets[i];
+
+    return count;
+}
+
+float x11keycount_average(x11keycount_t *keycount) {
+    return (float) x11keycount_total(keycount) / TIMESEC;
 }
 
