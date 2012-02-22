@@ -1,7 +1,5 @@
 #define _XOPEN_SOURCE 500
 #include "tcpserver.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -16,6 +14,11 @@ tcpserver_t *tcpserver_init() {
 
     server = malloc(sizeof(tcpserver_t));
     server->list_s = socket(AF_INET, SOCK_STREAM, 0);
+    server->tcpcallback = NULL;
+    server->openedcount = 0;
+    server->opensocks = NULL;
+    server->openstreams = NULL;
+
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -57,6 +60,13 @@ int tcpserver_close(tcpserver_t *server) {
 int tcpserver_setcallback(tcpserver_t *server,
     int (*tcpcallback)(char*, char*, int)) {
     server->tcpcallback = tcpcallback;
+    return EXIT_SUCCESS;
+}
+
+int tcpserver_handle(tcpserver_t *server, int timeout) {
+    fd_set sockets;
+    struct timeval time;
+
     return EXIT_SUCCESS;
 }
 

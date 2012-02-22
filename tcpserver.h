@@ -1,12 +1,18 @@
 #ifndef _tcpserver_H
 #define _tcpserver_H
 
+#include <stdlib.h>
+#include <stdio.h>
+
 #define DEFAULT_PORT 6432
 #define WAITING_CONN 10
 
 typedef struct {
     int list_s;
     int (*tcpcallback)(char*, char*, int);
+    int openedcount;
+    int *opensocks;
+    FILE **openstreams;
 } tcpserver_t;
 
 tcpserver_t *tcpserver_init();
