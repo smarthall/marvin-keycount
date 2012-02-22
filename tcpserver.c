@@ -65,7 +65,29 @@ int tcpserver_setcallback(tcpserver_t *server,
 
 int tcpserver_handle(tcpserver_t *server, int timeout) {
     fd_set sockets;
+    int highfd;
     struct timeval time;
+
+    time.tv_sec = 0;
+    time.tv_usec = timeout;
+
+    FD_ZERO(&sockets);
+    FD_SET(server->list_s, &sockets);
+    highfd = server->list_s;
+    for (int i = 0; i < server->openedcount; i++) {
+        FD_SET(server->opensocks[i], &sockets);
+        if (server->opensocks[i] > highfd) highfd = server->opensocks[i];
+    }
+
+    while (select(highfd + 1, &sockets, NULL, NULL, &time) > 0) {
+        // Accept new connections
+        // Retrieve data from any waiting
+        // On command entry
+          // Call the callback function
+          // Send the response
+          // Free the memory
+          // If the exit code was not EXIT_SUCCESS then close
+    }
 
     return EXIT_SUCCESS;
 }
