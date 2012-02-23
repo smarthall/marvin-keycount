@@ -80,8 +80,14 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
     }
 
     while (select(highfd + 1, &sockets, NULL, NULL, &time) > 0) {
-        // Accept new connections
-        // Retrieve data from any waiting
+        if (FD_ISSET(server->list_s, &sockets)) {
+            // Accept new connections
+        }
+        for (int i = 0; i < server->openedcount; i++) {
+            if (FD_ISSET(server->opensocks[i], &sockets)) {
+                // Retrieve data from any waiting
+            }
+        }
         // On command entry
           // Call the callback function
           // Send the response
