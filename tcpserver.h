@@ -6,6 +6,7 @@
 
 #define DEFAULT_PORT 6432
 #define WAITING_CONN 10
+#define COMMAND_BUFF 255
 
 typedef struct {
     int list_s;
@@ -13,6 +14,7 @@ typedef struct {
     int openedcount;
     int *opensocks;
     FILE **openstreams;
+    char **cmd_buff;
 } tcpserver_t;
 
 tcpserver_t *tcpserver_init();
