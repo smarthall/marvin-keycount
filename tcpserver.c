@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 tcpserver_t *tcpserver_init() {
     struct sockaddr_in servaddr;
@@ -16,8 +18,6 @@ tcpserver_t *tcpserver_init() {
     server->list_s = socket(AF_INET, SOCK_STREAM, 0);
     server->tcpcallback = NULL;
     server->openedcount = 0;
-    server->opensocks = NULL;
-    server->openstreams = NULL;
 
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
@@ -25,6 +25,7 @@ tcpserver_t *tcpserver_init() {
     servaddr.sin_port = htons(DEFAULT_PORT);
     bind(server->list_s, (struct sockaddr*) &servaddr, sizeof(servaddr));
     listen(server->list_s, WAITING_CONN);
+    fcntl(server->list_s, F_SETFD, O_NONBLOCK);
 
     return server;
 }
@@ -83,20 +84,36 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
 
     while (select(highfd + 1, &sockets, NULL, NULL, &time) > 0) {
         if (FD_ISSET(server->list_s, &sockets)) {
-            // Accept new connections
+            if (server->openedcount < CONCURRENT_CON) {
+                // Accept new connections
+                int newsock = server->openedcount;
+                server->opensocks[newsock] = accept(server->list_s, NULL, NULL);
+                server->openstreams[newsock] = fdopen(server->opensocks[newsock], "a");
+                server->cmd_count[newsock] = 0;
+                server->openedcount++;
+            } else {
+                // Refuse the connection
+                shutdown(accept(server->list_s, NULL, NULL), 0);
+            }
         }
         for (int i = 0; i < server->openedcount; i++) {
             if (FD_ISSET(server->opensocks[i], &sockets)) {
                 // Retrieve data from any waiting
-            }
-        }
+                int nb = recv(server->opensocks[i], 
+                              server->cmd_buff[i] + server->cmd_count[i],
+                              (COMMAND_BUFF - 1) - server->cmd_count[i],
+                              0);
 
-        for (int i = 0; i < server->openedcount; i++) {
-            // Check if any buffers have full commands
-              // Call the callback function
-              // Send the response
-              // Free the memory
-              // If the exit code was not EXIT_SUCCESS then close
+                server->cmd_count[i] += nb;
+                // TODO What if the lines too long?
+
+                if (strchr(server->cmd_buff[i], '\n')) {
+                    char reply_buff[COMMAND_BUFF];
+                    server->tcpcallback(server->cmd_buff[i], reply_buff, COMMAND_BUFF);
+                    if (strlen(reply_buff) < COMMAND_BUFF)
+                        send(server->opensocks[i], reply_buff, strlen(reply_buff) + 1, 0);
+                }
+            }
         }
 
         sockets = origsockets;

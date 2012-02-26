@@ -26,6 +26,7 @@ int main() {
 }
 
 int tcpcallback(char *command, char *reply, int bufsize) {
+    strcpy(reply, "ok\n");
     return EXIT_SUCCESS;
 }
 
