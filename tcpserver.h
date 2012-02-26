@@ -14,7 +14,6 @@ typedef struct {
     int (*tcpcallback)(char*, char*, int);
     int openedcount;
     int opensocks[CONCURRENT_CON];
-    FILE *openstreams[CONCURRENT_CON];
     char cmd_buff[CONCURRENT_CON][COMMAND_BUFF];
     char cmd_count[CONCURRENT_CON];
 } tcpserver_t;

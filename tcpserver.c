@@ -88,7 +88,6 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
                 // Accept new connections
                 int newsock = server->openedcount;
                 server->opensocks[newsock] = accept(server->list_s, NULL, NULL);
-                server->openstreams[newsock] = fdopen(server->opensocks[newsock], "a");
                 server->cmd_count[newsock] = 0;
                 server->openedcount++;
             } else {
