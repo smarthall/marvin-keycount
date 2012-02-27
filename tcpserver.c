@@ -23,6 +23,8 @@ static int tcpserver_newconnection(tcpserver_t *server, int sock) {
         server->head = nc;
         server->tail = nc;
         nc->next = NULL;
+
+        return EXIT_SUCCESS;
     }
 
     nc->next = server->head;
