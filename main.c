@@ -17,7 +17,6 @@ int main() {
 
     while (1) {
         x11keycount_poll(keycount);
-        //tcpserver_sendreplies(server, WAITTIME, x11keycount_total(keycount));
         tcpserver_handle(server, WAITTIME);
     }
 

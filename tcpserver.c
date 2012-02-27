@@ -85,28 +85,6 @@ tcpserver_t *tcpserver_init() {
     return server;
 }
 
-int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned int count) {
-    fd_set socks;
-    struct timeval time;
-    int csock;
-    FILE *outstream;
-
-    time.tv_sec = 0;
-    time.tv_usec = timeout;
-    FD_ZERO(&socks);
-    FD_SET(server->list_s, &socks);
-
-    while (select(server->list_s + 1, &socks, NULL, NULL, &time) > 0) {
-        csock = accept(server->list_s, NULL, NULL);
-        outstream = fdopen(csock, "a");
-        fprintf(outstream, "%u\n", count);
-        fclose(outstream);
-        close(csock);
-    }
-
-    return EXIT_SUCCESS;
-}
-
 int tcpserver_close(tcpserver_t *server) {
     close(server->list_s);
     free(server);
