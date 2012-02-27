@@ -10,6 +10,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#define NULL_POS -1
+
+static int tcpserver_addconnection(tcpserver_t *server, int sock) {
+
+}
+
+static int tcpserver_delconnection(tcpserver_t *server, int sock) {
+
+}
+
+static int tcpserver_nextconnection(tcpserver_t *server, tcpserver_pos_t *pos) {
+
+}
+
 tcpserver_t *tcpserver_init() {
     struct sockaddr_in servaddr;
     tcpserver_t *server;

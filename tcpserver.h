@@ -18,6 +18,8 @@ typedef struct {
     char cmd_count[CONCURRENT_CON];
 } tcpserver_t;
 
+typedef int tcpserver_pos_t;
+
 tcpserver_t *tcpserver_init();
 int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned int count);
 int tcpserver_setcallback(tcpserver_t *server,
