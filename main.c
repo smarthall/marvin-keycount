@@ -5,10 +5,11 @@
 #include "x11keycount.h"
 #include "tcpserver.h"
 
+x11keycount_t *keycount;
+
 int tcpcallback(char *command, char *reply, int bufsize);
 
 int main() {
-    x11keycount_t *keycount;
     tcpserver_t *server;
 
     keycount = x11keycount_init();
@@ -31,8 +32,20 @@ int tcpcallback(char *command, char *reply, int bufsize) {
         strcpy(reply, "ok\n");
         return EXIT_SUCCESS;
     }
+    if (strncmp("count", command, 5) == 0) {
+        snprintf(reply, bufsize, "%lu\n", x11keycount_total(keycount));
+        return EXIT_SUCCESS;
+    }
+    if (strncmp("avg", command, 3) == 0) {
+        snprintf(reply, bufsize, "%f\n", x11keycount_average(keycount));
+        return EXIT_SUCCESS;
+    }
+    if (strncmp("quit", command, 4) == 0) {
+        strcpy(reply, "bye\n");
+        return EXIT_FAILURE;
+    }
 
-    strcpy(reply, "Unknown Command\n");
+    strcpy(reply, "err: unknown\n");
     return EXIT_SUCCESS;
 }
 
