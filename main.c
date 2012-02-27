@@ -27,7 +27,12 @@ int main() {
 }
 
 int tcpcallback(char *command, char *reply, int bufsize) {
-    strcpy(reply, "ok\n");
+    if (strncmp("test", command, 4) == 0) {
+        strcpy(reply, "ok\n");
+        return EXIT_SUCCESS;
+    }
+
+    strcpy(reply, "Unknown Command\n");
     return EXIT_SUCCESS;
 }
 
