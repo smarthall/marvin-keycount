@@ -49,6 +49,8 @@ static int tcpserver_killconnection(tcpserver_t *server, int sock) {
     if ((cur == server->cur) && (prev == NULL)) server->cur = NULL;
     if ((cur == server->cur) && (prev != NULL)) server->cur = prev;
 
+    free(cur);
+
     return EXIT_SUCCESS;
 }
 
@@ -100,40 +102,45 @@ int tcpserver_setcallback(tcpserver_t *server,
 int tcpserver_handle(tcpserver_t *server, int timeout) {
     fd_set sockets, origsockets;
     int highfd;
+    conn *cur;
     struct timeval time;
 
     time.tv_sec = 0;
     time.tv_usec = timeout;
 
+    /* tcpserver_getfdset */
     FD_ZERO(&sockets);
     FD_SET(server->list_s, &sockets);
     highfd = server->list_s;
-    for (int i = 0; i < server->openedcount; i++) {
-        FD_SET(server->opensocks[i], &sockets);
-        if (server->opensocks[i] > highfd) highfd = server->opensocks[i];
+    while ((cur = tcpserver_nextconnection(server)) != NULL) {
+        FD_SET(cur->socket, &sockets);
+        if (cur->socket > highfd) highfd = cur->socket;
     }
 
     origsockets = sockets;
 
     while (select(highfd + 1, &sockets, NULL, NULL, &time) > 0) {
         if (FD_ISSET(server->list_s, &sockets))
-            tcpserver_newconnection(server, server->list_s) {
-        for (int i = 0; i < server->openedcount; i++) {
-            if (FD_ISSET(server->opensocks[i], &sockets)) {
+            tcpserver_newconnection(server, server->list_s);
+
+        while ((cur = tcpserver_nextconnection(server)) != NULL) {
+            if (FD_ISSET(cur->socket, &sockets)) {
+                /* tcpserver_conngetdata */
                 // Retrieve data from any waiting
-                int nb = recv(server->opensocks[i], 
-                              server->cmd_buff[i] + server->cmd_count[i],
-                              (COMMAND_BUFF - 1) - server->cmd_count[i],
+                int nb = recv(cur->socket, 
+                              cur->buf + cur->bufcount,
+                              (COMMAND_BUFF - 1) - cur->bufcount,
                               0);
 
-                server->cmd_count[i] += nb;
+                cur->bufcount += nb;
                 // TODO What if the lines too long?
 
-                if (strchr(server->cmd_buff[i], '\n')) {
-                    char reply_buff[COMMAND_BUFF];
-                    server->tcpcallback(server->cmd_buff[i], reply_buff, COMMAND_BUFF);
-                    if (strlen(reply_buff) < COMMAND_BUFF)
-                        send(server->opensocks[i], reply_buff, strlen(reply_buff) + 1, 0);
+                /* tcpserver_processbuf */
+                if (strchr(cur->buf, '\n')) {
+                    char rbuf[COMMAND_BUFF];
+                    server->tcpcallback(cur->buf, rbuf, COMMAND_BUFF);
+                    if (strlen(rbuf) < COMMAND_BUFF)
+                        send(cur->socket, rbuf, strlen(rbuf) + 1, 0);
                 }
             }
         }
