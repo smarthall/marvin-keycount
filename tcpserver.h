@@ -9,16 +9,24 @@
 #define CONCURRENT_CON 5
 #define COMMAND_BUFF 255
 
+struct connections_el {
+    int socket;
+    char buf[COMMAND_BUFF];
+    unsigned int bufcount;
+
+    struct connections_el *next;
+};
+
 typedef struct {
     int list_s;
     int (*tcpcallback)(char*, char*, int);
     int openedcount;
-    int opensocks[CONCURRENT_CON];
-    char cmd_buff[CONCURRENT_CON][COMMAND_BUFF];
-    char cmd_count[CONCURRENT_CON];
+    struct connections_el *cur;
+    struct connections_el *head;
+    struct connections_el *tail;
 } tcpserver_t;
 
-typedef int tcpserver_pos_t;
+typedef struct connections_el conn;
 
 tcpserver_t *tcpserver_init();
 int tcpserver_sendreplies(tcpserver_t *server, int timeout, unsigned int count);

@@ -12,16 +12,54 @@
 
 #define NULL_POS -1
 
-static int tcpserver_addconnection(tcpserver_t *server, int sock) {
+static int tcpserver_newconnection(tcpserver_t *server, int sock) {
+    conn *nc = malloc(sizeof(conn));
 
+    nc->socket = accept(sock, NULL, NULL);
+    nc->bufcount = 0;
+    server->openedcount++;
+
+    if (server->head == NULL) {
+        server->head = nc;
+        server->tail = nc;
+        nc->next = NULL;
+    }
+
+    nc->next = server->head;
+    server->head = nc;
+
+    return EXIT_SUCCESS;
 }
 
-static int tcpserver_delconnection(tcpserver_t *server, int sock) {
+static int tcpserver_killconnection(tcpserver_t *server, int sock) {
+    conn *cur = server->head;
+    conn *prev = NULL;
+    server->openedcount--;
 
+    while ((cur != NULL) && (cur->socket != sock)) {
+        prev = cur;
+        cur = cur->next;
+    }
+
+    if (cur == NULL) return EXIT_FAILURE;
+
+    if (prev != NULL) prev->next = cur->next;
+    if (prev == NULL) server->tail = cur->next;
+    if (cur == server->tail) server->tail = prev;
+    if ((cur == server->cur) && (prev == NULL)) server->cur = NULL;
+    if ((cur == server->cur) && (prev != NULL)) server->cur = prev;
+
+    return EXIT_SUCCESS;
 }
 
-static int tcpserver_nextconnection(tcpserver_t *server, tcpserver_pos_t *pos) {
+static conn* tcpserver_nextconnection(tcpserver_t *server) {
+    if (server->cur == NULL) {
+        server->cur = server->head;
+        return server->head;
+    }
 
+    server->cur = server->cur->next;
+    return server->cur;
 }
 
 tcpserver_t *tcpserver_init() {
@@ -31,6 +69,9 @@ tcpserver_t *tcpserver_init() {
     server = malloc(sizeof(tcpserver_t));
     server->list_s = socket(AF_INET, SOCK_STREAM, 0);
     server->tcpcallback = NULL;
+    server->head = NULL;
+    server->tail = NULL;
+    server->cur = NULL;
     server->openedcount = 0;
 
     memset(&servaddr, 0, sizeof(servaddr));
@@ -97,18 +138,8 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
     origsockets = sockets;
 
     while (select(highfd + 1, &sockets, NULL, NULL, &time) > 0) {
-        if (FD_ISSET(server->list_s, &sockets)) {
-            if (server->openedcount < CONCURRENT_CON) {
-                // Accept new connections
-                int newsock = server->openedcount;
-                server->opensocks[newsock] = accept(server->list_s, NULL, NULL);
-                server->cmd_count[newsock] = 0;
-                server->openedcount++;
-            } else {
-                // Refuse the connection
-                shutdown(accept(server->list_s, NULL, NULL), 0);
-            }
-        }
+        if (FD_ISSET(server->list_s, &sockets))
+            tcpserver_newconnection(server, server->list_s) {
         for (int i = 0; i < server->openedcount; i++) {
             if (FD_ISSET(server->opensocks[i], &sockets)) {
                 // Retrieve data from any waiting
