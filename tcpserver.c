@@ -143,6 +143,7 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
                     server->tcpcallback(cur->buf, rbuf, COMMAND_BUFF);
                     if (strlen(rbuf) < COMMAND_BUFF)
                         send(cur->socket, rbuf, strlen(rbuf) + 1, 0);
+                    cur->bufcount = 0;
                 }
             }
         }
