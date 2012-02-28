@@ -90,6 +90,11 @@ tcpserver_t *tcpserver_init() {
 }
 
 int tcpserver_close(tcpserver_t *server) {
+    conn *cur;
+
+    while ((cur = tcpserver_nextconnection(server)) != NULL) {
+        tcpserver_killconnection(server, cur->socket);
+    }
     close(server->list_s);
     free(server);
     return EXIT_SUCCESS;
