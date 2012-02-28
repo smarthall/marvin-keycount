@@ -21,7 +21,6 @@ static int tcpserver_newconnection(tcpserver_t *server, int sock) {
 
     if (server->head == NULL) {
         server->head = nc;
-        server->tail = nc;
         nc->next = NULL;
 
         return EXIT_SUCCESS;
@@ -46,11 +45,10 @@ static int tcpserver_killconnection(tcpserver_t *server, int sock) {
     if (cur == NULL) return EXIT_FAILURE;
 
     if (prev != NULL) prev->next = cur->next;
-    if (prev == NULL) server->tail = cur->next;
-    if (cur == server->tail) server->tail = prev;
     if ((cur == server->cur) && (prev == NULL)) server->cur = NULL;
     if ((cur == server->cur) && (prev != NULL)) server->cur = prev;
 
+    close(cur->socket);
     free(cur);
 
     return EXIT_SUCCESS;
@@ -74,7 +72,6 @@ tcpserver_t *tcpserver_init() {
     server->list_s = socket(AF_INET, SOCK_STREAM, 0);
     server->tcpcallback = NULL;
     server->head = NULL;
-    server->tail = NULL;
     server->cur = NULL;
     server->openedcount = 0;
 
@@ -140,10 +137,11 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
                 /* tcpserver_processbuf */
                 if (strchr(cur->buf, '\n')) {
                     char rbuf[COMMAND_BUFF];
-                    server->tcpcallback(cur->buf, rbuf, COMMAND_BUFF);
+                    int ret = server->tcpcallback(cur->buf, rbuf, COMMAND_BUFF);
                     if (strlen(rbuf) < COMMAND_BUFF)
                         send(cur->socket, rbuf, strlen(rbuf) + 1, 0);
                     cur->bufcount = 0;
+                    if (ret == EXIT_FAILURE) tcpserver_killconnection(server, cur->socket);
                 }
             }
         }

@@ -23,7 +23,6 @@ typedef struct {
     int openedcount;
     struct connections_el *cur;
     struct connections_el *head;
-    struct connections_el *tail;
 } tcpserver_t;
 
 typedef struct connections_el conn;
