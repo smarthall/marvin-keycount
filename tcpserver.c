@@ -68,9 +68,11 @@ static conn* tcpserver_nextconnection(tcpserver_t *server) {
 tcpserver_t *tcpserver_init() {
     struct sockaddr_in servaddr;
     tcpserver_t *server;
+    int optval = 1;
 
     server = malloc(sizeof(tcpserver_t));
     server->list_s = socket(AF_INET, SOCK_STREAM, 0);
+    setsockopt(server->list_s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     server->tcpcallback = NULL;
     server->head = NULL;
     server->cur = NULL;
