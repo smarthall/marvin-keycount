@@ -45,6 +45,7 @@ static int tcpserver_killconnection(tcpserver_t *server, int sock) {
     if (cur == NULL) return EXIT_FAILURE;
 
     if (prev != NULL) prev->next = cur->next;
+    if (prev == NULL) server->head = cur->next;
     if ((cur == server->cur) && (prev == NULL)) server->cur = NULL;
     if ((cur == server->cur) && (prev != NULL)) server->cur = prev;
 
