@@ -134,6 +134,11 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
                               (COMMAND_BUFF - 1) - cur->bufcount,
                               0);
 
+                if (nb <= 0) {
+                    tcpserver_killconnection(server, cur->socket);
+                    break;
+                }
+
                 cur->bufcount += nb;
                 // TODO What if the lines too long?
 
