@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include "x11keycount.h"
 #include "tcpserver.h"
 
 x11keycount_t *keycount;
+unsigned short int loopexit = 0;
 
+void sigdie(int sig);
 int tcpcallback(char *command, char *reply, int bufsize);
 
 int main() {
@@ -15,12 +18,14 @@ int main() {
     keycount = x11keycount_init();
     server = tcpserver_init();
     tcpserver_setcallback(server, &tcpcallback);
+    signal(SIGINT, sigdie);
 
-    while (1) {
+    while (!loopexit) {
         x11keycount_poll(keycount);
         tcpserver_handle(server, WAITTIME);
     }
 
+    printf("Got CTRL-C, Exiting.\n");
     tcpserver_close(server);
     server = NULL;
     x11keycount_close(keycount);
@@ -47,5 +52,9 @@ int tcpcallback(char *command, char *reply, int bufsize) {
 
     strcpy(reply, "err: unknown\n");
     return EXIT_SUCCESS;
+}
+
+void sigdie(int sig) {
+    loopexit = 1;
 }
 
