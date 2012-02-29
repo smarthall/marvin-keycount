@@ -57,6 +57,7 @@ int x11keycount_poll(x11keycount_t *keycount) {
             }
         }
         memcpy(keycount->last_keys, keys, sizeof(char) * 32);
+        //TODO: Instead of memcopy, use two arrays and flip
     }
 
     if (keycount->nb_time < time(NULL)) {
