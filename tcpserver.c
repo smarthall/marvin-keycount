@@ -11,6 +11,7 @@
 #include <fcntl.h>
 
 #define NULL_POS -1
+#define BUF_ERR_STR "\nerr: command exceeded maximum length\n"
 
 static int tcpserver_newconnection(tcpserver_t *server, int sock) {
     conn *nc = malloc(sizeof(conn));
@@ -63,6 +64,29 @@ static conn* tcpserver_nextconnection(tcpserver_t *server) {
 
     server->cur = server->cur->next;
     return server->cur;
+}
+
+static int tcpserver_conngetdata(tcpserver_t *server, conn *con) {
+    // Retrieve data from any waiting
+    int nb = recv(con->socket, 
+                  con->buf + con->bufcount,
+                  (COMMAND_BUFF - 1) - con->bufcount,
+                  0);
+
+    if (nb <= 0) {
+        tcpserver_killconnection(server, con->socket);
+        return EXIT_FAILURE;
+    }
+
+    con->bufcount += nb;
+    if (con->bufcount >= COMMAND_BUFF) {
+        con->bufcount = 0;
+        send(con->socket, BUF_ERR_STR, strlen(BUF_ERR_STR) + 1, 0);
+    }
+    // TODO What if the lines too long?
+
+
+    return EXIT_SUCCESS;
 }
 
 tcpserver_t *tcpserver_init() {
@@ -132,20 +156,8 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
 
         while ((cur = tcpserver_nextconnection(server)) != NULL) {
             if (FD_ISSET(cur->socket, &sockets)) {
-                /* tcpserver_conngetdata */
-                // Retrieve data from any waiting
-                int nb = recv(cur->socket, 
-                              cur->buf + cur->bufcount,
-                              (COMMAND_BUFF - 1) - cur->bufcount,
-                              0);
-
-                if (nb <= 0) {
-                    tcpserver_killconnection(server, cur->socket);
+                if (tcpserver_conngetdata(server, cur) == EXIT_FAILURE)
                     break;
-                }
-
-                cur->bufcount += nb;
-                // TODO What if the lines too long?
 
                 /* tcpserver_processbuf */
                 if (strchr(cur->buf, '\n')) {
