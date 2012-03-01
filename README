@@ -1,3 +1,17 @@
 # Marvin Keycounter
 
 Marvin Keycounter counts the number of keypresses and releases during the play of the arcade machine. This can then be used to generate usage statistics for it.
+
+# TODO
+* Prevent buffer overflows when recieving data
+* Dont throw data away after the \n
+* Better error checking
+* Better timings, make sure the polling is regular
+* Count max keys held down at any one time
+* Thread support?
+* Register command fallbacks, not a global fallback
+* Have a prompt
+* Have a welcome message on connect
+* Version command
+* Allow configuraqtion
+* Daemonize
