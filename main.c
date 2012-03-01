@@ -19,6 +19,7 @@ int main() {
     server = tcpserver_init();
     tcpserver_setcallback(server, &tcpcallback);
     signal(SIGINT, sigdie);
+    signal(SIGPIPE, SIG_IGN);
 
     while (!loopexit) {
         x11keycount_poll(keycount);
