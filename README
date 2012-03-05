@@ -7,7 +7,6 @@ Marvin Keycounter counts the number of keypresses and releases during the play o
 * Dont throw data away after the \n
 * Better error checking
 * Better timings, make sure the polling is regular
-* Count max keys held down at any one time
 * Thread support?
 * Register command fallbacks, not a global fallback
 * Have a prompt
