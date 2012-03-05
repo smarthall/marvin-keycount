@@ -5,13 +5,20 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
-#include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
 
 #define NULL_POS -1
 #define BUF_ERR_STR "\nerr: command exceeded maximum length\n"
+
+// Local functions
+static int tcpserver_newconnection(tcpserver_t *server, int sock);
+static int tcpserver_killconnection(tcpserver_t *server, int sock);
+static conn* tcpserver_nextconnection(tcpserver_t *server);
+static int tcpserver_conngetdata(tcpserver_t *server, conn *con);
+static int tcpserver_processbuf(tcpserver_t *server, conn *con);
+static int tcpserver_makefdset(tcpserver_t *server);
 
 static int tcpserver_newconnection(tcpserver_t *server, int sock) {
     conn *nc = malloc(sizeof(conn));
@@ -23,12 +30,14 @@ static int tcpserver_newconnection(tcpserver_t *server, int sock) {
     if (server->head == NULL) {
         server->head = nc;
         nc->next = NULL;
+        tcpserver_makefdset(server);
 
         return EXIT_SUCCESS;
     }
 
     nc->next = server->head;
     server->head = nc;
+    tcpserver_makefdset(server);
 
     return EXIT_SUCCESS;
 }
@@ -52,6 +61,7 @@ static int tcpserver_killconnection(tcpserver_t *server, int sock) {
 
     close(cur->socket);
     free(cur);
+    tcpserver_makefdset(server);
 
     return EXIT_SUCCESS;
 }
@@ -79,12 +89,10 @@ static int tcpserver_conngetdata(tcpserver_t *server, conn *con) {
     }
 
     con->bufcount += nb;
-    if (con->bufcount >= COMMAND_BUFF) {
+    if (con->bufcount >= (COMMAND_BUFF - 1)) {
         con->bufcount = 0;
         send(con->socket, BUF_ERR_STR, strlen(BUF_ERR_STR) + 1, 0);
     }
-    // TODO What if the lines too long?
-
 
     return EXIT_SUCCESS;
 }
@@ -102,6 +110,21 @@ static int tcpserver_processbuf(tcpserver_t *server, conn *con) {
     return EXIT_SUCCESS;
 }
 
+static int tcpserver_makefdset(tcpserver_t *server) {
+    fd_set fds;
+    conn *cur;
+
+    FD_ZERO(&fds);
+    FD_SET(server->list_s, &fds);
+    server->highfd = server->list_s;
+    while ((cur = tcpserver_nextconnection(server)) != NULL) {
+        FD_SET(cur->socket, &fds);
+        if (cur->socket > server->highfd) server->highfd = cur->socket;
+    }
+
+    server->sockets = fds;
+    return EXIT_SUCCESS;
+}
 
 tcpserver_t *tcpserver_init() {
     struct sockaddr_in servaddr;
@@ -124,6 +147,8 @@ tcpserver_t *tcpserver_init() {
     listen(server->list_s, WAITING_CONN);
     fcntl(server->list_s, F_SETFD, O_NONBLOCK);
 
+    tcpserver_makefdset(server);
+
     return server;
 }
 
@@ -145,26 +170,16 @@ int tcpserver_setcallback(tcpserver_t *server,
 }
 
 int tcpserver_handle(tcpserver_t *server, int timeout) {
-    fd_set sockets, origsockets;
-    int highfd;
+    fd_set sockets;
     conn *cur;
     struct timeval time;
 
     time.tv_sec = 0;
     time.tv_usec = timeout;
 
-    /* tcpserver_getfdset */
-    FD_ZERO(&sockets);
-    FD_SET(server->list_s, &sockets);
-    highfd = server->list_s;
-    while ((cur = tcpserver_nextconnection(server)) != NULL) {
-        FD_SET(cur->socket, &sockets);
-        if (cur->socket > highfd) highfd = cur->socket;
-    }
+    sockets = server->sockets;
 
-    origsockets = sockets;
-
-    while (select(highfd + 1, &sockets, NULL, NULL, &time) > 0) {
+    while (select(server->highfd + 1, &sockets, NULL, NULL, &time) > 0) {
         if (FD_ISSET(server->list_s, &sockets))
             tcpserver_newconnection(server, server->list_s);
 
@@ -177,7 +192,7 @@ int tcpserver_handle(tcpserver_t *server, int timeout) {
             }
         }
 
-        sockets = origsockets;
+        sockets = server->sockets;
     }
 
     return EXIT_SUCCESS;

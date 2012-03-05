@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/select.h>
 
 #define DEFAULT_PORT 6432
 #define WAITING_CONN 10
@@ -21,6 +22,8 @@ typedef struct {
     int list_s;
     int (*tcpcallback)(char*, char*, int);
     int openedcount;
+    int highfd;
+    fd_set sockets;
     struct connections_el *cur;
     struct connections_el *head;
 } tcpserver_t;
