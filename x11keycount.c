@@ -69,6 +69,7 @@ int x11keycount_poll(x11keycount_t *keycount) {
     if (keycount->nb_time < time(NULL)) {
         keycount->cb = (keycount->cb + 1) % BUCKETS;
         keycount->count[keycount->cb] = 0;
+        keycount->max[keycount->cb] = 0;
         keycount->nb_time = time(NULL) + BUCKTIME;
     }
 
