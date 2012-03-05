@@ -22,4 +22,4 @@ install: marvinlog
 	install -m 0755 marvinlog $(DESTDIR)/usr/bin/marvinlog
 
 clean:
-	-rm -f marvinlog *.o
+	-rm -f marvinlog *.o gmon.out
