@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS=-g -Wall -c -std=c99 -pg
-LDFLAGS=-Wall -lX11 -pg
+CFLAGS=-g -Wall -c -std=c99 -O3
+LDFLAGS=-Wall -lX11
 
 .PHONY: all clean install
 all:  marvinlog
