@@ -46,6 +46,10 @@ int tcpcallback(char *command, char *reply, int bufsize) {
         snprintf(reply, bufsize, "%f\n", x11keycount_average(keycount));
         return EXIT_SUCCESS;
     }
+    if (strncmp("max", command, 3) == 0) {
+        snprintf(reply, bufsize, "%d\n", x11keycount_max(keycount));
+        return EXIT_SUCCESS;
+    }
     if (strncmp("quit", command, 4) == 0) {
         strcpy(reply, "bye\n");
         return EXIT_FAILURE;
