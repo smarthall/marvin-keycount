@@ -46,15 +46,16 @@ int x11keycount_poll(x11keycount_t *keycount) {
     if (memcmp(keys, keycount->last_keys, sizeof(char) * 32) != 0) {
         for (int i = 0; i < 32; i++) {
             unsigned char diff = keys[i] ^ keycount->last_keys[i];
+            unsigned char ck = keys[i];
             unsigned char c, m;
             // Count different bits
             for (c = 0; diff; diff >>= 1)
             {
                 c += diff & 1;
             }
-            for (m = 0; keys[i]; keys[i] >>= 1)
+            for (m = 0; ck; ck >>= 1)
             {
-                m += keys[i] & 1;
+                m += ck & 1;
             }
             keycount->count[keycount->cb] += c;
             if (m > keycount->max[keycount->cb])
