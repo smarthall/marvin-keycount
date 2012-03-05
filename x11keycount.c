@@ -44,23 +44,24 @@ int x11keycount_poll(x11keycount_t *keycount) {
         return EXIT_FAILURE;
     }
     if (memcmp(keys, keycount->last_keys, sizeof(char) * 32) != 0) {
+        unsigned char m = 0;
         for (int i = 0; i < 32; i++) {
             unsigned char diff = keys[i] ^ keycount->last_keys[i];
             unsigned char ck = keys[i];
-            unsigned char c, m;
+            unsigned char c;
             // Count different bits
             for (c = 0; diff; diff >>= 1)
             {
                 c += diff & 1;
             }
-            for (m = 0; ck; ck >>= 1)
+            for (; ck; ck >>= 1)
             {
                 m += ck & 1;
             }
             keycount->count[keycount->cb] += c;
-            if (m > keycount->max[keycount->cb])
-                keycount->max[keycount->cb] = m;
         }
+        if (m > keycount->max[keycount->cb])
+            keycount->max[keycount->cb] = m;
         memcpy(keycount->last_keys, keys, sizeof(char) * 32);
         //TODO: Instead of memcopy, use two arrays and flip
     }
