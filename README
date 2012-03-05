@@ -12,5 +12,5 @@ Marvin Keycounter counts the number of keypresses and releases during the play o
 * Have a prompt
 * Have a welcome message on connect
 * Version command
-* Allow configuraqtion
+* Allow configuration
 * Daemonize
